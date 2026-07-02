@@ -8,6 +8,14 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
+        <add id="MageMate_AdminPasskey::manage"
+             title="Admin Passkeys"
+             translate="title"
+             module="MageMate_AdminPasskey"
+             sortOrder="85"
+             parent="Magento_Backend::system_other_settings"
+             action="passkey/manage"
+             resource="MageMate_AdminPasskey::manage_own"/>
         <add id="MageMate_AdminPasskey::register"
              title="Register a Passkey"
              translate="title"

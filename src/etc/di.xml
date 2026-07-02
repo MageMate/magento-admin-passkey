@@ -22,4 +22,11 @@
                 type="MageMate\AdminPasskey\Model\PasskeySearchResults"/>
     <preference for="MageMate\AdminPasskey\Api\PasskeyRepositoryInterface"
                 type="MageMate\AdminPasskey\Model\PasskeyRepository"/>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="magemate_admin_passkey_listing_data_source" xsi:type="string">MageMate\AdminPasskey\Model\ResourceModel\Passkey\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

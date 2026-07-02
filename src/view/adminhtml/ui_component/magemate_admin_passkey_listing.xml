@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">magemate_admin_passkey_listing.magemate_admin_passkey_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <buttons>
+            <button name="register">
+                <url path="passkey/register/index"/>
+                <class>primary</class>
+                <label translate="true">Register a Passkey</label>
+            </button>
+        </buttons>
+        <spinner>magemate_admin_passkey_columns</spinner>
+        <deps>
+            <dep>magemate_admin_passkey_listing.magemate_admin_passkey_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="magemate_admin_passkey_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">passkey_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>MageMate_AdminPasskey::manage_own</aclResource>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="magemate_admin_passkey_listing_data_source">
+            <settings>
+                <requestFieldName>passkey_id</requestFieldName>
+                <primaryFieldName>passkey_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters"/>
+        <massaction name="listing_massaction">
+            <action name="delete">
+                <settings>
+                    <confirm>
+                        <message translate="true">Are you sure you want to delete the selected passkeys?</message>
+                        <title translate="true">Delete passkeys</title>
+                    </confirm>
+                    <url path="passkey/manage/massDelete"/>
+                    <type>delete</type>
+                    <label translate="true">Delete</label>
+                </settings>
+            </action>
+            <action name="edit">
+                <settings>
+                    <callback>
+                        <target>editSelected</target>
+                        <provider>magemate_admin_passkey_listing.magemate_admin_passkey_listing.magemate_admin_passkey_columns_editor</provider>
+                    </callback>
+                    <type>edit</type>
+                    <label translate="true">Rename</label>
+                </settings>
+            </action>
+        </massaction>
+        <paging name="listing_paging"/>
+    </listingToolbar>
+    <columns name="magemate_admin_passkey_columns">
+        <settings>
+            <editorConfig>
+                <param name="clientConfig" xsi:type="array">
+                    <item name="saveUrl" xsi:type="url" path="passkey/manage/inlineEdit"/>
+                    <item name="validateBeforeSave" xsi:type="boolean">false</item>
+                </param>
+                <param name="indexField" xsi:type="string">passkey_id</param>
+                <param name="enabled" xsi:type="boolean">true</param>
+                <param name="selectProvider" xsi:type="string">magemate_admin_passkey_listing.magemate_admin_passkey_listing.magemate_admin_passkey_columns.ids</param>
+            </editorConfig>
+            <childDefaults>
+                <param name="fieldAction" xsi:type="array">
+                    <item name="provider" xsi:type="string">magemate_admin_passkey_listing.magemate_admin_passkey_listing.magemate_admin_passkey_columns_editor</item>
+                    <item name="target" xsi:type="string">startEdit</item>
+                    <item name="params" xsi:type="array">
+                        <item name="0" xsi:type="string">${ $.$data.rowIndex }</item>
+                        <item name="1" xsi:type="boolean">true</item>
+                    </item>
+                </param>
+            </childDefaults>
+        </settings>
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>passkey_id</indexField>
+            </settings>
+        </selectionsColumn>
+        <column name="passkey_id">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">ID</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+        <column name="username">
+            <settings>
+                <label translate="true">Admin User</label>
+            </settings>
+        </column>
+        <column name="label">
+            <settings>
+                <filter>text</filter>
+                <editor>
+                    <validation>
+                        <rule name="required-entry" xsi:type="boolean">true</rule>
+                    </validation>
+                    <editorType>text</editorType>
+                </editor>
+                <label translate="true">Label</label>
+            </settings>
+        </column>
+        <column name="aaguid">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Authenticator</label>
+            </settings>
+        </column>
+        <column name="status" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <options class="MageMate\AdminPasskey\Model\Passkey\Source\Status"/>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+                <sortable>false</sortable>
+            </settings>
+        </column>
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created</label>
+            </settings>
+        </column>
+        <column name="last_used_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Last Used</label>
+            </settings>
+        </column>
+        <column name="expires_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Expires</label>
+            </settings>
+        </column>
+        <actionsColumn name="actions" class="MageMate\AdminPasskey\Ui\Component\Listing\Column\PasskeyActions">
+            <settings>
+                <indexField>passkey_id</indexField>
+            </settings>
+        </actionsColumn>
+    </columns>
+</listing>
