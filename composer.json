@@ -1,0 +1,32 @@
+{
+  "name": "magemate/magento-admin-passkey",
+  "description": "Passwordless / WebAuthn (FIDO2 passkey) authentication for the Magento 2 admin",
+  "type": "magento2-module",
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "version": "1.0.0",
+  "require": {
+    "php": "~8.3.0",
+    "magento/framework": "*",
+    "magento/module-backend": "*",
+    "magento/module-user": "*",
+    "magento/module-authorization": "*",
+    "magento/module-config": "*",
+    "magento/module-ui": "*"
+  },
+  "autoload": {
+    "files": [
+      "src/registration.php"
+    ],
+    "psr-4": {
+      "MageMate\\AdminPasskey\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MageMate\\AdminPasskey\\Test\\": "tests/"
+    }
+  }
+}
