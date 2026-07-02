@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <adminpasskey>
+            <general>
+                <enabled>0</enabled>
+                <force_setup>0</force_setup>
+                <disallow_password_login>0</disallow_password_login>
+                <passkey_max_validity_days>0</passkey_max_validity_days>
+                <require_user_verification>1</require_user_verification>
+                <satisfies_2fa>1</satisfies_2fa>
+            </general>
+        </adminpasskey>
+    </default>
+</config>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="MageMate_AdminPasskey::manage_own"
+                          title="Manage own admin passkeys" sortOrder="10">
+                    <resource id="MageMate_AdminPasskey::manage_all"
+                              title="Manage all admin passkeys" sortOrder="10"/>
+                </resource>
+                <resource id="MageMate_AdminPasskey::config"
+                          title="Admin passkey configuration" sortOrder="20"/>
+            </resource>
+        </resources>
+    </acl>
+</config>
