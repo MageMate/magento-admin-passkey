@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace MageMate\AdminPasskey\Controller\Adminhtml\Login;
 
-use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use MageMate\AdminPasskey\Model\Login\LoginChallengeStorage;
 use MageMate\AdminPasskey\Model\Login\RateLimiter;
 use MageMate\AdminPasskey\Model\Webauthn\AssertionOptionsFactoryInterface;
@@ -35,9 +35,9 @@ class Options implements HttpPostActionInterface, CsrfAwareActionInterface
     private JsonFactory $jsonFactory;
 
     /**
-     * @var Config
+     * @var FeatureAvailability
      */
-    private Config $config;
+    private FeatureAvailability $featureAvailability;
 
     /**
      * @var AssertionOptionsFactoryInterface
@@ -56,20 +56,20 @@ class Options implements HttpPostActionInterface, CsrfAwareActionInterface
 
     /**
      * @param JsonFactory $jsonFactory
-     * @param Config $config
+     * @param FeatureAvailability $featureAvailability
      * @param AssertionOptionsFactoryInterface $optionsFactory
      * @param LoginChallengeStorage $challengeStorage
      * @param RateLimiter $rateLimiter
      */
     public function __construct(
         JsonFactory $jsonFactory,
-        Config $config,
+        FeatureAvailability $featureAvailability,
         AssertionOptionsFactoryInterface $optionsFactory,
         LoginChallengeStorage $challengeStorage,
         RateLimiter $rateLimiter
     ) {
         $this->jsonFactory = $jsonFactory;
-        $this->config = $config;
+        $this->featureAvailability = $featureAvailability;
         $this->optionsFactory = $optionsFactory;
         $this->challengeStorage = $challengeStorage;
         $this->rateLimiter = $rateLimiter;
@@ -83,7 +83,7 @@ class Options implements HttpPostActionInterface, CsrfAwareActionInterface
         /** @var Json $result */
         $result = $this->jsonFactory->create();
 
-        if (!$this->config->isEnabled() || !$this->rateLimiter->allow()) {
+        if (!$this->featureAvailability->isEnabled() || !$this->rateLimiter->allow()) {
             return $this->error($result);
         }
 

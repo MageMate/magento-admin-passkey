@@ -12,6 +12,7 @@ use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
 use MageMate\AdminPasskey\Exception\WebauthnException;
 use MageMate\AdminPasskey\Model\Config;
 use MageMate\AdminPasskey\Model\Login\AssertionAuthenticator;
+use MageMate\AdminPasskey\Model\Tfa\TwoFactorAuthBridge;
 use MageMate\AdminPasskey\Model\Webauthn\AssertionVerifierInterface;
 use MageMate\AdminPasskey\Model\Webauthn\Data\AssertionResult;
 use MageMate\AdminPasskey\Model\Webauthn\Internal\Base64Url;
@@ -65,6 +66,11 @@ class AssertionAuthenticatorTest extends TestCase
      */
     private $dateTime;
 
+    /**
+     * @var TwoFactorAuthBridge&MockObject
+     */
+    private $twoFactorAuthBridge;
+
     private AssertionAuthenticator $authenticator;
 
     protected function setUp(): void
@@ -84,6 +90,7 @@ class AssertionAuthenticatorTest extends TestCase
             ->getMock();
         $this->eventManager = $this->createMock(EventManager::class);
         $this->dateTime = $this->createMock(DateTime::class);
+        $this->twoFactorAuthBridge = $this->createMock(TwoFactorAuthBridge::class);
 
         $this->authenticator = new AssertionAuthenticator(
             $this->repository,
@@ -93,7 +100,8 @@ class AssertionAuthenticatorTest extends TestCase
             $this->userFactory,
             $this->authSession,
             $this->eventManager,
-            $this->dateTime
+            $this->dateTime,
+            $this->twoFactorAuthBridge
         );
     }
 
@@ -129,6 +137,8 @@ class AssertionAuthenticatorTest extends TestCase
         $this->eventManager->expects($this->once())
             ->method('dispatch')
             ->with('backend_auth_user_login_success', ['user' => $user]);
+        $this->twoFactorAuthBridge->expects($this->once())
+            ->method('grantIfPasskeySatisfiesTwoFactor');
 
         $this->assertSame($user, $this->authenticator->authenticate('cred', 'AAAA', 'BBBB', 'CCCC', 'chal'));
     }
@@ -139,6 +149,7 @@ class AssertionAuthenticatorTest extends TestCase
             ->willThrowException(new NoSuchEntityException());
         $this->authSession->expects($this->never())->method('processLogin');
         $this->eventManager->expects($this->never())->method('dispatch');
+        $this->twoFactorAuthBridge->expects($this->never())->method('grantIfPasskeySatisfiesTwoFactor');
 
         $this->expectException(WebauthnException::class);
 

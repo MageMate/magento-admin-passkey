@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace MageMate\AdminPasskey\Test\Unit\Model\ForceSetup;
 
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
-use MageMate\AdminPasskey\Model\AdobeImsState;
 use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use MageMate\AdminPasskey\Model\ForceSetup\SetupRequirement;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -20,14 +20,14 @@ use PHPUnit\Framework\TestCase;
 class SetupRequirementTest extends TestCase
 {
     /**
+     * @var FeatureAvailability&MockObject
+     */
+    private $feature;
+
+    /**
      * @var Config&MockObject
      */
     private $config;
-
-    /**
-     * @var AdobeImsState&MockObject
-     */
-    private $imsState;
 
     /**
      * @var PasskeyRepositoryInterface&MockObject
@@ -41,17 +41,16 @@ class SetupRequirementTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->feature = $this->createMock(FeatureAvailability::class);
         $this->config = $this->createMock(Config::class);
-        $this->imsState = $this->createMock(AdobeImsState::class);
         $this->repository = $this->createMock(PasskeyRepositoryInterface::class);
-        $this->requirement = new SetupRequirement($this->config, $this->imsState, $this->repository);
+        $this->requirement = new SetupRequirement($this->feature, $this->config, $this->repository);
     }
 
-    public function testRequiredWhenEnabledForcedNoImsAndNoPasskey(): void
+    public function testRequiredWhenAvailableForcedAndNoPasskey(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isForceSetup')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->repository->method('hasActivePasskey')->with(7)->willReturn(false);
 
         $this->assertTrue($this->requirement->isRequiredFor(7));
@@ -59,17 +58,18 @@ class SetupRequirementTest extends TestCase
 
     public function testNotRequiredWhenUserAlreadyHasPasskey(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isForceSetup')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->repository->method('hasActivePasskey')->with(7)->willReturn(true);
 
         $this->assertFalse($this->requirement->isRequiredFor(7));
     }
 
-    public function testNotRequiredWhenFeatureDisabled(): void
+    public function testNotRequiredWhenFeatureUnavailable(): void
     {
-        $this->config->method('isEnabled')->willReturn(false);
+        // Covers both the disabled config and the Adobe-IMS-active case (D6),
+        // which FeatureAvailability::isEnabled() collapses into one signal.
+        $this->feature->method('isEnabled')->willReturn(false);
         $this->config->expects($this->never())->method('isForceSetup');
         $this->repository->expects($this->never())->method('hasActivePasskey');
 
@@ -78,18 +78,8 @@ class SetupRequirementTest extends TestCase
 
     public function testNotRequiredWhenForceSetupOff(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isForceSetup')->willReturn(false);
-        $this->repository->expects($this->never())->method('hasActivePasskey');
-
-        $this->assertFalse($this->requirement->isRequiredFor(7));
-    }
-
-    public function testNotRequiredWhenAdobeImsActive(): void
-    {
-        $this->config->method('isEnabled')->willReturn(true);
-        $this->config->method('isForceSetup')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(true);
         $this->repository->expects($this->never())->method('hasActivePasskey');
 
         $this->assertFalse($this->requirement->isRequiredFor(7));
@@ -97,7 +87,7 @@ class SetupRequirementTest extends TestCase
 
     public function testNotRequiredWhenNoUser(): void
     {
-        $this->config->expects($this->never())->method('isEnabled');
+        $this->feature->expects($this->never())->method('isEnabled');
 
         $this->assertFalse($this->requirement->isRequiredFor(0));
     }

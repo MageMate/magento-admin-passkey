@@ -7,32 +7,33 @@ declare(strict_types=1);
 
 namespace MageMate\AdminPasskey\Block\Adminhtml\Login;
 
-use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 
 /**
  * Renders the "Sign in with a passkey" button on the admin login form.
  *
- * The button is only emitted when admin passkey support is enabled, so a store
- * that has not opted in shows the stock password-only login.
+ * The button is only emitted when admin passkey support is available (feature
+ * on and Adobe IMS not the active admin auth method), so a store that has not
+ * opted in — or that runs Adobe IMS — shows the stock password-only login.
  */
 class Button extends Template
 {
     /**
-     * @var Config
+     * @var FeatureAvailability
      */
-    private Config $config;
+    private FeatureAvailability $featureAvailability;
 
     /**
      * @param Context $context
-     * @param Config $config
+     * @param FeatureAvailability $featureAvailability
      * @param array $data
      */
-    public function __construct(Context $context, Config $config, array $data = [])
+    public function __construct(Context $context, FeatureAvailability $featureAvailability, array $data = [])
     {
         parent::__construct($context, $data);
-        $this->config = $config;
+        $this->featureAvailability = $featureAvailability;
     }
 
     /**
@@ -42,7 +43,7 @@ class Button extends Template
      */
     public function isPasskeyLoginEnabled(): bool
     {
-        return $this->config->isEnabled();
+        return $this->featureAvailability->isEnabled();
     }
 
     /**

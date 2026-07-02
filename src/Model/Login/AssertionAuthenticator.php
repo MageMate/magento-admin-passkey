@@ -11,6 +11,7 @@ use MageMate\AdminPasskey\Api\Data\PasskeyInterface;
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
 use MageMate\AdminPasskey\Exception\WebauthnException;
 use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\Tfa\TwoFactorAuthBridge;
 use MageMate\AdminPasskey\Model\Webauthn\AssertionVerifierInterface;
 use MageMate\AdminPasskey\Model\Webauthn\Data\AssertionRequest;
 use MageMate\AdminPasskey\Model\Webauthn\Internal\Base64Url;
@@ -74,6 +75,11 @@ class AssertionAuthenticator
     private DateTime $dateTime;
 
     /**
+     * @var TwoFactorAuthBridge
+     */
+    private TwoFactorAuthBridge $twoFactorAuthBridge;
+
+    /**
      * @param PasskeyRepositoryInterface $passkeyRepository
      * @param AssertionVerifierInterface $verifier
      * @param Base64Url $base64Url
@@ -82,6 +88,7 @@ class AssertionAuthenticator
      * @param Session $authSession
      * @param EventManager $eventManager
      * @param DateTime $dateTime
+     * @param TwoFactorAuthBridge $twoFactorAuthBridge
      */
     public function __construct(
         PasskeyRepositoryInterface $passkeyRepository,
@@ -91,7 +98,8 @@ class AssertionAuthenticator
         UserFactory $userFactory,
         Session $authSession,
         EventManager $eventManager,
-        DateTime $dateTime
+        DateTime $dateTime,
+        TwoFactorAuthBridge $twoFactorAuthBridge
     ) {
         $this->passkeyRepository = $passkeyRepository;
         $this->verifier = $verifier;
@@ -101,6 +109,7 @@ class AssertionAuthenticator
         $this->authSession = $authSession;
         $this->eventManager = $eventManager;
         $this->dateTime = $dateTime;
+        $this->twoFactorAuthBridge = $twoFactorAuthBridge;
     }
 
     /**
@@ -208,6 +217,11 @@ class AssertionAuthenticator
      * login is recorded, and backend_auth_user_login_success is dispatched so
      * downstream listeners (2FA, logging) run as they would for a normal login.
      *
+     * After the session is established, the 2FA session is granted when
+     * `satisfies_2fa` is on so the passkey stands in for the configured second
+     * factor; the grant is written after processLogin() so it survives the
+     * session-id regeneration.
+     *
      * @param User $user
      * @return void
      */
@@ -217,5 +231,6 @@ class AssertionAuthenticator
         $this->authSession->processLogin();
         $user->getResource()->recordLogin($user);
         $this->eventManager->dispatch('backend_auth_user_login_success', ['user' => $user]);
+        $this->twoFactorAuthBridge->grantIfPasskeySatisfiesTwoFactor();
     }
 }

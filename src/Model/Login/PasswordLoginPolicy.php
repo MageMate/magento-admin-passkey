@@ -8,30 +8,30 @@ declare(strict_types=1);
 namespace MageMate\AdminPasskey\Model\Login;
 
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
-use MageMate\AdminPasskey\Model\AdobeImsState;
 use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use Magento\User\Model\UserFactory;
 
 /**
  * Decides whether password sign-in must be blocked for an admin user.
  *
- * Password login is blocked only when the feature is enabled, the
- * `disallow_password_login` flag is on, Adobe IMS is not the active admin auth
- * method (D6), and the user owns at least one active, non-expired passkey.
- * Users without an active passkey (or with only expired ones) keep password
- * login so they are never locked out by expiry alone.
+ * Password login is blocked only when the passkey feature is available (feature
+ * on and Adobe IMS not the active admin auth method, per D6), the
+ * `disallow_password_login` flag is on, and the user owns at least one active,
+ * non-expired passkey. Users without an active passkey (or with only expired
+ * ones) keep password login so they are never locked out by expiry alone.
  */
 class PasswordLoginPolicy
 {
     /**
+     * @var FeatureAvailability
+     */
+    private FeatureAvailability $featureAvailability;
+
+    /**
      * @var Config
      */
     private Config $config;
-
-    /**
-     * @var AdobeImsState
-     */
-    private AdobeImsState $adobeImsState;
 
     /**
      * @var UserFactory
@@ -44,19 +44,19 @@ class PasswordLoginPolicy
     private PasskeyRepositoryInterface $passkeyRepository;
 
     /**
+     * @param FeatureAvailability $featureAvailability
      * @param Config $config
-     * @param AdobeImsState $adobeImsState
      * @param UserFactory $userFactory
      * @param PasskeyRepositoryInterface $passkeyRepository
      */
     public function __construct(
+        FeatureAvailability $featureAvailability,
         Config $config,
-        AdobeImsState $adobeImsState,
         UserFactory $userFactory,
         PasskeyRepositoryInterface $passkeyRepository
     ) {
+        $this->featureAvailability = $featureAvailability;
         $this->config = $config;
-        $this->adobeImsState = $adobeImsState;
         $this->userFactory = $userFactory;
         $this->passkeyRepository = $passkeyRepository;
     }
@@ -69,12 +69,8 @@ class PasswordLoginPolicy
      */
     public function isPasswordLoginBlocked(string $username): bool
     {
-        if (!$this->config->isEnabled() || !$this->config->isPasswordLoginDisallowed()) {
-            return false;
-        }
-
-        // D6: passkey policy is suppressed while Adobe IMS owns admin login.
-        if ($this->adobeImsState->isActive()) {
+        // D6: isEnabled() is false while Adobe IMS owns admin login.
+        if (!$this->featureAvailability->isEnabled() || !$this->config->isPasswordLoginDisallowed()) {
             return false;
         }
 

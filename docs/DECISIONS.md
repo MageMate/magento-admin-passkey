@@ -40,6 +40,45 @@ binding (origin, RP id hash, challenge, user presence, user verification) and th
 public-key extraction are enforced; the attestation statement itself is not
 cryptographically verified under the `none` policy.
 
+## D3 / D6 — TFA and Adobe IMS reconciliation (resolved: 2FA grant + IMS auto-disable, US-011)
+
+**D3 — passkey as second factor.** When `satisfies_2fa` is on, a successful
+passwordless passkey login marks Magento's Two-Factor Auth session granted, so
+`Magento\TwoFactorAuth\Observer\ControllerActionPredispatch` no longer challenges
+(or forces provider configuration for) that admin — the phishing-resistant
+passkey stands in for the configured second factor. When the flag is off the 2FA
+session is left untouched and the admin completes their configured provider as
+usual.
+
+The grant is written by `Model\Tfa\TwoFactorAuthBridge::grantIfPasskeySatisfiesTwoFactor()`,
+called from `AssertionAuthenticator::establishSession()` **after** `processLogin()`
+so it survives the session-id regeneration. `Magento_TwoFactorAuth` is a *soft*
+dependency (module.xml `<sequence>`), so the bridge resolves
+`Magento\TwoFactorAuth\Api\TfaSessionInterface` lazily via the object manager and
+guards with `interface_exists()` — the module keeps working when TFA is absent
+(referring to the interface via `::class` does not autoload it). No conflict with
+TFA's predispatch observer: our own `Observer\ForcePasskeySetup` already sequences
+after TFA and allow-lists `tfa_*` actions, and granting the session means TFA's
+observer simply sees `isGranted() === true` and returns without redirecting (no
+loop, no fight over the redirect).
+
+**D6 — Adobe IMS auto-disable.** All passkey features auto-disable while Adobe
+IMS owns admin login. `Model\FeatureAvailability::isEnabled()` is the single seam
+(`Config::isEnabled() && !AdobeImsState::isActive()`); every entry point — the
+login button, the login/registration options endpoints, force-setup and
+password-blocking policies — gates on it, so IMS-active means no passkey button,
+no ceremonies, no forced setup, no password block. `AdobeImsState` reads the
+`adobe_ims/integration/admin_enabled` config path rather than depending on the
+Adobe IMS module, so detection works whether or not that module is installed.
+`Model\System\Message\AdobeImsConflict` surfaces a minor admin notification when
+passkeys are switched on but suppressed by IMS, explaining why the feature is
+inactive.
+
+**Not chosen:** hard-injecting `TfaSessionInterface`/`ImsConfig` (would break the
+module when either optional module is absent), and re-implementing a 2FA provider
+(the session-grant approach reuses TFA's own bypass path instead of adding a
+provider the admin would have to configure).
+
 ## D8 — Lockout / recovery (resolved: super-admin CLI deactivates the user's passkeys)
 
 **Decision:** Recovery is a console command run by someone with shell (super-admin)

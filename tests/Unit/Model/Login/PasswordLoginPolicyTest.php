@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace MageMate\AdminPasskey\Test\Unit\Model\Login;
 
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
-use MageMate\AdminPasskey\Model\AdobeImsState;
 use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use MageMate\AdminPasskey\Model\Login\PasswordLoginPolicy;
 use Magento\User\Model\User;
 use Magento\User\Model\UserFactory;
@@ -22,14 +22,14 @@ use PHPUnit\Framework\TestCase;
 class PasswordLoginPolicyTest extends TestCase
 {
     /**
+     * @var FeatureAvailability&MockObject
+     */
+    private $feature;
+
+    /**
      * @var Config&MockObject
      */
     private $config;
-
-    /**
-     * @var AdobeImsState&MockObject
-     */
-    private $imsState;
 
     /**
      * @var UserFactory&MockObject
@@ -53,8 +53,8 @@ class PasswordLoginPolicyTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->feature = $this->createMock(FeatureAvailability::class);
         $this->config = $this->createMock(Config::class);
-        $this->imsState = $this->createMock(AdobeImsState::class);
         $this->userFactory = $this->createMock(UserFactory::class);
         $this->user = $this->getMockBuilder(User::class)
             ->disableOriginalConstructor()
@@ -63,18 +63,17 @@ class PasswordLoginPolicyTest extends TestCase
         $this->repository = $this->createMock(PasskeyRepositoryInterface::class);
 
         $this->policy = new PasswordLoginPolicy(
+            $this->feature,
             $this->config,
-            $this->imsState,
             $this->userFactory,
             $this->repository
         );
     }
 
-    public function testBlockedWhenEnabledDisallowedNoImsAndUserHasActivePasskey(): void
+    public function testBlockedWhenAvailableDisallowedAndUserHasActivePasskey(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isPasswordLoginDisallowed')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->userFactory->method('create')->willReturn($this->user);
         $this->user->method('loadByUsername')->with('admin')->willReturnSelf();
         $this->user->method('getId')->willReturn(7);
@@ -85,9 +84,8 @@ class PasswordLoginPolicyTest extends TestCase
 
     public function testNotBlockedWhenUserHasNoActivePasskey(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isPasswordLoginDisallowed')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->userFactory->method('create')->willReturn($this->user);
         $this->user->method('loadByUsername')->willReturnSelf();
         $this->user->method('getId')->willReturn(7);
@@ -96,9 +94,11 @@ class PasswordLoginPolicyTest extends TestCase
         $this->assertFalse($this->policy->isPasswordLoginBlocked('admin'));
     }
 
-    public function testNotBlockedWhenFeatureDisabled(): void
+    public function testNotBlockedWhenFeatureUnavailable(): void
     {
-        $this->config->method('isEnabled')->willReturn(false);
+        // Covers both the disabled config and the Adobe-IMS-active case (D6):
+        // FeatureAvailability::isEnabled() folds them into one signal.
+        $this->feature->method('isEnabled')->willReturn(false);
         $this->config->expects($this->never())->method('isPasswordLoginDisallowed');
         $this->userFactory->expects($this->never())->method('create');
 
@@ -107,18 +107,8 @@ class PasswordLoginPolicyTest extends TestCase
 
     public function testNotBlockedWhenDisallowFlagOff(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isPasswordLoginDisallowed')->willReturn(false);
-        $this->userFactory->expects($this->never())->method('create');
-
-        $this->assertFalse($this->policy->isPasswordLoginBlocked('admin'));
-    }
-
-    public function testNotBlockedWhenAdobeImsActive(): void
-    {
-        $this->config->method('isEnabled')->willReturn(true);
-        $this->config->method('isPasswordLoginDisallowed')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(true);
         $this->userFactory->expects($this->never())->method('create');
 
         $this->assertFalse($this->policy->isPasswordLoginBlocked('admin'));
@@ -126,9 +116,8 @@ class PasswordLoginPolicyTest extends TestCase
 
     public function testNotBlockedWhenUsernameEmpty(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isPasswordLoginDisallowed')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->userFactory->expects($this->never())->method('create');
 
         $this->assertFalse($this->policy->isPasswordLoginBlocked('   '));
@@ -136,9 +125,8 @@ class PasswordLoginPolicyTest extends TestCase
 
     public function testNotBlockedWhenUsernameUnknown(): void
     {
-        $this->config->method('isEnabled')->willReturn(true);
+        $this->feature->method('isEnabled')->willReturn(true);
         $this->config->method('isPasswordLoginDisallowed')->willReturn(true);
-        $this->imsState->method('isActive')->willReturn(false);
         $this->userFactory->method('create')->willReturn($this->user);
         $this->user->method('loadByUsername')->willReturnSelf();
         $this->user->method('getId')->willReturn(null);

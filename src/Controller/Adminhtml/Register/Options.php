@@ -9,6 +9,7 @@ namespace MageMate\AdminPasskey\Controller\Adminhtml\Register;
 
 use MageMate\AdminPasskey\Api\Data\PasskeyInterface;
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 use MageMate\AdminPasskey\Model\Registration\ChallengeStorage;
 use MageMate\AdminPasskey\Model\Webauthn\RegistrationOptionsFactoryInterface;
 use Magento\Backend\App\Action;
@@ -57,12 +58,18 @@ class Options extends Action implements HttpPostActionInterface
     private ChallengeStorage $challengeStorage;
 
     /**
+     * @var FeatureAvailability
+     */
+    private FeatureAvailability $featureAvailability;
+
+    /**
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param Session $authSession
      * @param RegistrationOptionsFactoryInterface $optionsFactory
      * @param PasskeyRepositoryInterface $passkeyRepository
      * @param ChallengeStorage $challengeStorage
+     * @param FeatureAvailability $featureAvailability
      */
     public function __construct(
         Context $context,
@@ -70,7 +77,8 @@ class Options extends Action implements HttpPostActionInterface
         Session $authSession,
         RegistrationOptionsFactoryInterface $optionsFactory,
         PasskeyRepositoryInterface $passkeyRepository,
-        ChallengeStorage $challengeStorage
+        ChallengeStorage $challengeStorage,
+        FeatureAvailability $featureAvailability
     ) {
         parent::__construct($context);
         $this->jsonFactory = $jsonFactory;
@@ -78,6 +86,7 @@ class Options extends Action implements HttpPostActionInterface
         $this->optionsFactory = $optionsFactory;
         $this->passkeyRepository = $passkeyRepository;
         $this->challengeStorage = $challengeStorage;
+        $this->featureAvailability = $featureAvailability;
     }
 
     /**
@@ -87,6 +96,13 @@ class Options extends Action implements HttpPostActionInterface
     {
         /** @var Json $result */
         $result = $this->jsonFactory->create();
+
+        if (!$this->featureAvailability->isEnabled()) {
+            return $result->setData([
+                'success' => false,
+                'message' => (string)__('Passkey registration is not available right now.'),
+            ]);
+        }
 
         /** @var User|null $user */
         $user = $this->authSession->getUser();

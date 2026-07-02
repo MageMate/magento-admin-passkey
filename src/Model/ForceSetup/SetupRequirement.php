@@ -8,27 +8,27 @@ declare(strict_types=1);
 namespace MageMate\AdminPasskey\Model\ForceSetup;
 
 use MageMate\AdminPasskey\Api\PasskeyRepositoryInterface;
-use MageMate\AdminPasskey\Model\AdobeImsState;
 use MageMate\AdminPasskey\Model\Config;
+use MageMate\AdminPasskey\Model\FeatureAvailability;
 
 /**
  * Decides whether an admin user must be forced to register a passkey.
  *
- * Force-setup only applies when the feature is enabled, the `force_setup`
- * flag is on, Adobe IMS is not the active admin auth method (D6), and the
- * user owns no active, non-expired passkey.
+ * Force-setup only applies when the passkey feature is available (feature on
+ * and Adobe IMS not the active admin auth method, per D6), the `force_setup`
+ * flag is on, and the user owns no active, non-expired passkey.
  */
 class SetupRequirement
 {
     /**
+     * @var FeatureAvailability
+     */
+    private FeatureAvailability $featureAvailability;
+
+    /**
      * @var Config
      */
     private Config $config;
-
-    /**
-     * @var AdobeImsState
-     */
-    private AdobeImsState $adobeImsState;
 
     /**
      * @var PasskeyRepositoryInterface
@@ -36,17 +36,17 @@ class SetupRequirement
     private PasskeyRepositoryInterface $passkeyRepository;
 
     /**
+     * @param FeatureAvailability $featureAvailability
      * @param Config $config
-     * @param AdobeImsState $adobeImsState
      * @param PasskeyRepositoryInterface $passkeyRepository
      */
     public function __construct(
+        FeatureAvailability $featureAvailability,
         Config $config,
-        AdobeImsState $adobeImsState,
         PasskeyRepositoryInterface $passkeyRepository
     ) {
+        $this->featureAvailability = $featureAvailability;
         $this->config = $config;
-        $this->adobeImsState = $adobeImsState;
         $this->passkeyRepository = $passkeyRepository;
     }
 
@@ -62,12 +62,8 @@ class SetupRequirement
             return false;
         }
 
-        if (!$this->config->isEnabled() || !$this->config->isForceSetup()) {
-            return false;
-        }
-
-        // D6: passkey features are suppressed while Adobe IMS owns admin login.
-        if ($this->adobeImsState->isActive()) {
+        // D6: isEnabled() is false while Adobe IMS owns admin login.
+        if (!$this->featureAvailability->isEnabled() || !$this->config->isForceSetup()) {
             return false;
         }
 
