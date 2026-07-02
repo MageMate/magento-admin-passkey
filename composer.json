@@ -9,6 +9,9 @@
   "version": "1.0.0",
   "require": {
     "php": "~8.3.0",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "2tvenom/cborencode": "*",
     "magento/framework": "*",
     "magento/module-backend": "*",
     "magento/module-user": "*",

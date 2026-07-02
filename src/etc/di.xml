@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="MageMate\AdminPasskey\Model\Webauthn\RelyingPartyInterface"
+                type="MageMate\AdminPasskey\Model\Webauthn\RelyingParty"/>
+    <preference for="MageMate\AdminPasskey\Model\Webauthn\RegistrationOptionsFactoryInterface"
+                type="MageMate\AdminPasskey\Model\Webauthn\RegistrationOptionsFactory"/>
+    <preference for="MageMate\AdminPasskey\Model\Webauthn\AssertionOptionsFactoryInterface"
+                type="MageMate\AdminPasskey\Model\Webauthn\AssertionOptionsFactory"/>
+    <preference for="MageMate\AdminPasskey\Model\Webauthn\RegistrationVerifierInterface"
+                type="MageMate\AdminPasskey\Model\Webauthn\RegistrationVerifier"/>
+    <preference for="MageMate\AdminPasskey\Model\Webauthn\AssertionVerifierInterface"
+                type="MageMate\AdminPasskey\Model\Webauthn\AssertionVerifier"/>
+</config>
