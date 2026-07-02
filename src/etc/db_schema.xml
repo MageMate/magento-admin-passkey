@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="magemate_admin_passkey" resource="default" engine="innodb" comment="MageMate Admin Passkey Credentials">
+        <column xsi:type="int" name="passkey_id" unsigned="true" nullable="false" identity="true"
+                comment="Passkey ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="false"
+                comment="Admin User ID"/>
+        <column xsi:type="varchar" name="credential_id" length="512" nullable="false"
+                comment="Credential ID (base64url)"/>
+        <column xsi:type="text" name="public_key" nullable="false"
+                comment="COSE Public Key (CBOR/base64)"/>
+        <column xsi:type="int" name="sign_count" unsigned="true" nullable="false" default="0"
+                comment="Clone-detection Signature Counter"/>
+        <column xsi:type="varchar" name="aaguid" length="64" nullable="true"
+                comment="Authenticator AAGUID"/>
+        <column xsi:type="varchar" name="transports" length="255" nullable="true"
+                comment="Transports (JSON array)"/>
+        <column xsi:type="varchar" name="label" length="255" nullable="false" default=""
+                comment="User-facing Label"/>
+        <column xsi:type="varchar" name="attestation_fmt" length="64" nullable="true"
+                comment="Attestation Format"/>
+        <column xsi:type="smallint" name="is_active" unsigned="true" nullable="false" default="1"
+                comment="Is Active (soft disable)"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Creation Time"/>
+        <column xsi:type="timestamp" name="last_used_at" on_update="false" nullable="true"
+                comment="Last Used Time"/>
+        <column xsi:type="timestamp" name="expires_at" on_update="false" nullable="true"
+                comment="Expiry Time"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="passkey_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="MAGEMATE_ADMIN_PASSKEY_CREDENTIAL_ID">
+            <column name="credential_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MAGEMATE_ADMIN_PASSKEY_USER_ID_ADMIN_USER_USER_ID"
+                    table="magemate_admin_passkey" column="user_id"
+                    referenceTable="admin_user" referenceColumn="user_id" onDelete="CASCADE"/>
+        <index referenceId="MAGEMATE_ADMIN_PASSKEY_USER_ID" indexType="btree">
+            <column name="user_id"/>
+        </index>
+    </table>
+</schema>

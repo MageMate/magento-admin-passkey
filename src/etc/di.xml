@@ -16,4 +16,10 @@
                 type="MageMate\AdminPasskey\Model\Webauthn\RegistrationVerifier"/>
     <preference for="MageMate\AdminPasskey\Model\Webauthn\AssertionVerifierInterface"
                 type="MageMate\AdminPasskey\Model\Webauthn\AssertionVerifier"/>
+    <preference for="MageMate\AdminPasskey\Api\Data\PasskeyInterface"
+                type="MageMate\AdminPasskey\Model\Passkey"/>
+    <preference for="MageMate\AdminPasskey\Api\Data\PasskeySearchResultsInterface"
+                type="MageMate\AdminPasskey\Model\PasskeySearchResults"/>
+    <preference for="MageMate\AdminPasskey\Api\PasskeyRepositoryInterface"
+                type="MageMate\AdminPasskey\Model\PasskeyRepository"/>
 </config>

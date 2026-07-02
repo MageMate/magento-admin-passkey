@@ -1,0 +1,27 @@
+{
+    "magemate_admin_passkey": {
+        "column": {
+            "passkey_id": true,
+            "user_id": true,
+            "credential_id": true,
+            "public_key": true,
+            "sign_count": true,
+            "aaguid": true,
+            "transports": true,
+            "label": true,
+            "attestation_fmt": true,
+            "is_active": true,
+            "created_at": true,
+            "last_used_at": true,
+            "expires_at": true
+        },
+        "index": {
+            "MAGEMATE_ADMIN_PASSKEY_USER_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "MAGEMATE_ADMIN_PASSKEY_CREDENTIAL_ID": true,
+            "MAGEMATE_ADMIN_PASSKEY_USER_ID_ADMIN_USER_USER_ID": true
+        }
+    }
+}
