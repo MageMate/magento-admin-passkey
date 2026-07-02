@@ -1,0 +1,28 @@
+<?php
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+
+/** @var \MageMate\AdminPasskey\Block\Adminhtml\Login\Button $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<?php if ($block->isPasskeyLoginEnabled()): ?>
+<div id="passkey-login-root"
+     class="passkey-login"
+     data-options-url="<?= $escaper->escapeHtmlAttr($block->getOptionsUrl()) ?>"
+     data-verify-url="<?= $escaper->escapeHtmlAttr($block->getVerifyUrl()) ?>"
+     data-form-key="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
+    <button type="button" id="passkey-login-button" class="action-secondary">
+        <span><?= $escaper->escapeHtml(__('Sign in with a passkey')) ?></span>
+    </button>
+    <div id="passkey-login-message" class="message" style="display:none"></div>
+</div>
+<script type="text/x-magento-init">
+    {
+        "#passkey-login-root": {
+            "MageMate_AdminPasskey/js/login": {}
+        }
+    }
+</script>
+<?php endif; ?>

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="form.buttons">
+            <block class="MageMate\AdminPasskey\Block\Adminhtml\Login\Button"
+                   name="adminhtml_auth_login_passkey"
+                   template="MageMate_AdminPasskey::login_button.phtml"/>
+        </referenceContainer>
+    </body>
+</page>
