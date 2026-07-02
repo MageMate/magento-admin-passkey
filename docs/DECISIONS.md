@@ -40,6 +40,84 @@ binding (origin, RP id hash, challenge, user presence, user verification) and th
 public-key extraction are enforced; the attestation statement itself is not
 cryptographically verified under the `none` policy.
 
+## D2 — Passwordless session establishment (resolved: mirror Adobe IMS `loginByUsername`, US-007)
+
+**Decision:** After a passkey assertion verifies, establish the backend session
+directly instead of routing through `Magento\Backend\Model\Auth::login` (which
+requires a password). `Model\Login\AssertionAuthenticator::establishSession()`
+mirrors `Magento\AdminAdobeIms\Model\Auth::loginByUsername`: `setUser($user)` →
+`processLogin()` (regenerates the session id and renews secret URL keys) →
+`$user->getResource()->recordLogin($user)` → dispatch
+`backend_auth_user_login_success`. The admin action log and login event
+subscribers therefore see the login exactly as they would for a password login.
+
+**Why this is safe to bypass the password check:** the password is *replaced*, not
+skipped — a phishing-resistant WebAuthn assertion (origin + RP-ID hash + single-use
+challenge + signature + `signCount` monotonicity + UV) is verified server-side
+before `setUser` is ever called. Every verification failure collapses to one
+generic `WebauthnException` (anti-enumeration). The endpoints implement
+`HttpPostActionInterface` + `CsrfAwareActionInterface` (not backend
+`AbstractAction`) so they are reachable logged-out without opening any same-named
+authenticated action.
+
+**Not chosen:** faking a password / reflection into `Auth`, or a custom auth
+adapter — both are more fragile than reusing core's own post-login sequence.
+
+## D4 — Management location (resolved: dedicated adminhtml grid, US-006)
+
+**Decision:** Ship a UI-component grid (`magemate_admin_passkey_listing`) under
+**System → Other Settings → Admin Passkeys** to list / rename / delete passkeys,
+plus the self-service **Register a passkey** page. Own-vs-all visibility is
+enforced in two layers: the grid collection hides other users' rows unless
+`MageMate_AdminPasskey::manage_all` is granted, and every mutating controller
+re-checks per row via `Model\Management\AccessValidator::canManage()`.
+
+**Why not a tab on the admin-user edit form (TFA's `AddTabToAdminUserEdit`
+pattern):** no core "Security" admin *menu* exists (only the system-config *tab*),
+and a standalone grid is the lower-coupling, self-service-friendly surface. The
+admin-user-edit tab remains a possible future addition (block + layout update on
+`adminhtml_user_edit`) but was not required to satisfy the story.
+
+## D5 — Attestation policy (resolved: `none`, US-002)
+
+**Decision:** Request `attestation: none`. The registration verifier enforces the
+ceremony binding and extracts/stores the public key, but does not cryptographically
+verify the attestation statement or trust an AAGUID. AAGUID is stored best-effort
+only (privacy + §6).
+
+**Why:** `none` avoids handling attestation CA chains and metadata, keeps the
+crypto surface small and auditable, and matches the privacy posture in the brief.
+The seam for a future `direct` policy is `$attestation['fmt']` / `attStmt` in
+`RegistrationVerifier` — flipping to `direct` means adding an attestation-format
+verifier there, nothing else changes.
+
+## D7 — Challenge store for pre-auth (resolved: session-bound single-use store, US-007)
+
+**Decision:** Store ceremony challenges in the Magento session (backend session
+for authenticated registration via `Model\Registration\ChallengeStorage`, a
+user-agnostic session store for pre-auth login via
+`Model\Login\LoginChallengeStorage`). Each challenge is **single-use** — read and
+cleared before verification — and the registration challenge is additionally pinned
+to the `user_id` to reject cross-user replay. The pre-auth options endpoint is
+rate-limited (`Model\Login\RateLimiter`, coarse per-IP sliding window via
+`CacheInterface` + `RemoteAddress`).
+
+**Why not cookie-signed challenges:** a server-side single-use store gives true
+one-shot semantics (a signed cookie can be replayed until its TTL) and needs no
+extra signing-key management. Magento sessions are already Redis-backed in
+production, satisfying the D7 "short-TTL store" intent without a bespoke cache
+schema. The seam is small: swapping to a dedicated `CacheInterface` store later is
+a drop-in change behind the same storage classes.
+
+## D9 — Minimum Magento / PHP (resolved: repo baseline, US-001/US-013)
+
+**Decision:** Target the repository's own baseline — Magento 2.4.8-p2 / PHP 8.3 —
+rather than pinning a `web-auth/webauthn-lib` version (D1 chose the hand-rolled
+adapter, so there is no external WebAuthn library to version). Runtime requirements
+are `ext-json` + `ext-openssl` (native) and `2tvenom/cborencode` (already vendored
+via `magento/module-two-factor-auth`). No new third-party dependency is introduced,
+so there is no external compatibility matrix to maintain.
+
 ## D3 / D6 — TFA and Adobe IMS reconciliation (resolved: 2FA grant + IMS auto-disable, US-011)
 
 **D3 — passkey as second factor.** When `satisfies_2fa` is on, a successful
