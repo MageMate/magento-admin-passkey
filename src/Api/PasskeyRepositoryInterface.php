@@ -69,6 +69,14 @@ interface PasskeyRepositoryInterface
     public function getListByUserId(int $userId, bool $activeOnly = false): array;
 
     /**
+     * Whether the admin user owns at least one active, non-expired passkey.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function hasActivePasskey(int $userId): bool;
+
+    /**
      * Get passkeys by search criteria.
      *
      * @param SearchCriteriaInterface $searchCriteria

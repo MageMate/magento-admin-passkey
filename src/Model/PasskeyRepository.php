@@ -182,6 +182,20 @@ class PasskeyRepository implements PasskeyRepositoryInterface
     /**
      * @inheritdoc
      */
+    public function hasActivePasskey(int $userId): bool
+    {
+        foreach ($this->getListByUserId($userId, true) as $passkey) {
+            if (!$this->isExpired($passkey)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getList(SearchCriteriaInterface $searchCriteria): PasskeySearchResultsInterface
     {
         /** @var Collection $collection */
