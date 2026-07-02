@@ -196,6 +196,22 @@ class PasskeyRepository implements PasskeyRepositoryInterface
     /**
      * @inheritdoc
      */
+    public function deactivateForUser(int $userId): int
+    {
+        $deactivated = 0;
+
+        foreach ($this->getListByUserId($userId, true) as $passkey) {
+            $passkey->setIsActive(false);
+            $this->save($passkey);
+            $deactivated++;
+        }
+
+        return $deactivated;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getList(SearchCriteriaInterface $searchCriteria): PasskeySearchResultsInterface
     {
         /** @var Collection $collection */

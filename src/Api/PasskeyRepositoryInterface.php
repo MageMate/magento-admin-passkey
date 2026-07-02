@@ -77,6 +77,19 @@ interface PasskeyRepositoryInterface
     public function hasActivePasskey(int $userId): bool;
 
     /**
+     * Deactivate every passkey belonging to the admin user (emergency recovery).
+     *
+     * Used by the recovery CLI (decision D8) to restore password login for a
+     * user who is locked out — password login is only blocked while the user
+     * owns an active passkey, so deactivating them re-opens password sign-in.
+     *
+     * @param int $userId
+     * @return int Number of passkeys deactivated.
+     * @throws CouldNotSaveException
+     */
+    public function deactivateForUser(int $userId): int;
+
+    /**
      * Get passkeys by search criteria.
      *
      * @param SearchCriteriaInterface $searchCriteria

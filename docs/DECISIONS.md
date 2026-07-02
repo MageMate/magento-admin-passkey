@@ -39,3 +39,48 @@ than silently downgraded.
 binding (origin, RP id hash, challenge, user presence, user verification) and the
 public-key extraction are enforced; the attestation statement itself is not
 cryptographically verified under the `none` policy.
+
+## D8 — Lockout / recovery (resolved: super-admin CLI deactivates the user's passkeys)
+
+**Decision:** Recovery is a console command run by someone with shell (super-admin)
+access:
+
+```
+bin/magento security:passkey:recover <username>
+```
+
+It deactivates every passkey owned by that admin user. Because password login is
+blocked *only* while the user owns an **active** passkey (see below), deactivating
+them re-opens password sign-in for that user immediately — no config change, no
+downtime for other admins, no emergency global bypass window.
+
+**How password login is blocked (US-009):** a `before` plugin on
+`Magento\Backend\Model\Auth::login` (`Plugin\Backend\DisallowPasswordLogin`)
+delegates to `Model\Login\PasswordLoginPolicy::isPasswordLoginBlocked($username)`.
+It throws `AuthenticationException` (directing the user to the passkey button)
+only when **all** hold: the feature is enabled, `disallow_password_login` is on,
+Adobe IMS is not the active admin auth (D6), the username resolves to a real admin
+user, and that user owns ≥1 **active, non-expired** passkey
+(`PasskeyRepository::hasActivePasskey`).
+
+**Why this design avoids permanent lockout:**
+
+- **Expiry never locks anyone out.** `hasActivePasskey` excludes expired
+  credentials, so if a user's only passkeys expire, the block lifts automatically
+  and password login works again — the exact scenario D8 worried about is a no-op.
+- **Lost/broken authenticator** (user still has an active passkey but can't use
+  it) is the one true lockout, and that is what the CLI recovers: a super-admin
+  deactivates the stuck credentials and the user falls back to password login,
+  after which they can re-register a passkey.
+- **Blast radius is one user.** Unlike flipping the global
+  `disallow_password_login` config off, the CLI touches only the named user, so
+  the policy stays enforced for everyone else.
+- **The plugin runs before `Auth::login`'s own try/catch**, so its exception
+  propagates cleanly to the login controller; the passwordless login path
+  (US-007) bypasses `Auth::login` entirely and is unaffected.
+
+**Not chosen:** a timed "emergency password bypass window" (adds a global
+weakening with a race window) and a config-only toggle as the *primary* recovery
+(too coarse — disables the policy site-wide). `bin/magento config:set
+adminpasskey/general/disallow_password_login 0` remains available as a manual
+last-resort global override, but the per-user CLI is the documented path.

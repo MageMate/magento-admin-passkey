@@ -29,4 +29,15 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Backend\Model\Auth">
+        <plugin name="magemate_admin_passkey_disallow_password_login"
+                type="MageMate\AdminPasskey\Plugin\Backend\DisallowPasswordLogin"/>
+    </type>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="magemate_admin_passkey_recover" xsi:type="object">MageMate\AdminPasskey\Console\Command\RecoverPasswordLogin</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
