@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="MageMate_AdminPasskey::register"
+             title="Register a Passkey"
+             translate="title"
+             module="MageMate_AdminPasskey"
+             sortOrder="90"
+             parent="Magento_Backend::system_other_settings"
+             action="passkey/register"
+             resource="MageMate_AdminPasskey::manage_own"/>
+    </menu>
+</config>

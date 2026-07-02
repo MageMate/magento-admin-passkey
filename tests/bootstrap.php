@@ -35,3 +35,19 @@ spl_autoload_register(
         }
     }
 );
+
+// Generated factories (e.g. PasskeyInterfaceFactory) live under generated/code
+// and are not composer-autoloaded; expose them so tests can mock the types.
+spl_autoload_register(
+    static function (string $class): void {
+        $prefix = 'MageMate\\AdminPasskey\\';
+        if (!str_starts_with($class, $prefix) || !str_ends_with($class, 'Factory')) {
+            return;
+        }
+
+        $path = __DIR__ . '/../../../../generated/code/' . str_replace('\\', '/', $class) . '.php';
+        if (is_file($path)) {
+            require $path;
+        }
+    }
+);

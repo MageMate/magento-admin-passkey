@@ -1,0 +1,44 @@
+<?php
+/**
+ * Copyright © Falcon Media. All rights reserved.
+ * https://www.falconmedia.nl
+ */
+
+/** @var \Magento\Backend\Block\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<div id="passkey-register-root"
+     class="passkey-register"
+     data-options-url="<?= $escaper->escapeHtmlAttr($block->getUrl('passkey/register/options')) ?>"
+     data-verify-url="<?= $escaper->escapeHtmlAttr($block->getUrl('passkey/register/verify')) ?>"
+     data-form-key="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
+    <fieldset class="admin__fieldset">
+        <div class="admin__field">
+            <label class="admin__field-label" for="passkey-label">
+                <span><?= $escaper->escapeHtml(__('Passkey name')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <input type="text"
+                       id="passkey-label"
+                       class="admin__control-text"
+                       maxlength="255"
+                       placeholder="<?= $escaper->escapeHtmlAttr(__('e.g. iPhone Face ID')) ?>"/>
+            </div>
+        </div>
+        <div class="admin__field">
+            <div class="admin__field-control">
+                <button type="button" id="passkey-register-button" class="action-primary">
+                    <span><?= $escaper->escapeHtml(__('Register a passkey')) ?></span>
+                </button>
+            </div>
+        </div>
+    </fieldset>
+    <div id="passkey-register-message" class="message" style="display:none"></div>
+</div>
+<script type="text/x-magento-init">
+    {
+        "#passkey-register-root": {
+            "MageMate_AdminPasskey/js/register": {}
+        }
+    }
+</script>
