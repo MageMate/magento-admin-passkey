@@ -103,9 +103,13 @@ class Verify implements HttpPostActionInterface, CsrfAwareActionInterface
             return $this->error($result);
         }
 
+        // getStartupPageUrl() yields a menu action path (e.g. "adminhtml/dashboard");
+        // it must be run through getUrl() to become a dispatchable admin URL with the
+        // secret key. Sending the raw path would resolve relative in the browser to
+        // .../admin/adminhtml/dashboard.
         return $result->setData([
             'success' => true,
-            'redirectUrl' => $this->backendUrl->getStartupPageUrl(),
+            'redirectUrl' => $this->backendUrl->getUrl($this->backendUrl->getStartupPageUrl()),
         ]);
     }
 

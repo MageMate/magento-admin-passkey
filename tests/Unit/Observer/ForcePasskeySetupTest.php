@@ -11,6 +11,7 @@ use MageMate\AdminPasskey\Controller\Adminhtml\Register\Index as RegisterIndex;
 use MageMate\AdminPasskey\Model\ForceSetup\SetupRequirement;
 use MageMate\AdminPasskey\Observer\ForcePasskeySetup;
 use Magento\Authorization\Model\UserContextInterface;
+use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
 use Magento\Framework\App\Request\Http;
@@ -18,7 +19,6 @@ use Magento\Framework\App\Response\Http as HttpResponse;
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Event;
 use Magento\Framework\Event\Observer;
-use Magento\Framework\UrlInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

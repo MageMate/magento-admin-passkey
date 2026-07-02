@@ -10,12 +10,12 @@ namespace MageMate\AdminPasskey\Observer;
 use MageMate\AdminPasskey\Controller\Adminhtml\Register\Index as RegisterIndex;
 use MageMate\AdminPasskey\Model\ForceSetup\SetupRequirement;
 use Magento\Authorization\Model\UserContextInterface;
+use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
 use Magento\Framework\AuthorizationInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\UrlInterface;
 
 /**
  * Redirects admins to passkey registration when force-setup applies.
